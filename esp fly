@@ -1,0 +1,128 @@
+-- Fly Script by z4trox x ChatGPT & Highlighting Script by depso
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Fly Script Configurable Variables
+local flySpeed = 50 -- Speed at which the player flies
+local flying = false
+
+-- Create body movers for flight
+local bodyVelocity = Instance.new("BodyVelocity")
+bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+
+local bodyGyro = Instance.new("BodyGyro")
+bodyGyro.CFrame = character.HumanoidRootPart.CFrame
+bodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+
+-- Function to start flying
+local function startFlying()
+    flying = true
+    bodyVelocity.Parent = character.HumanoidRootPart
+    bodyGyro.Parent = character.HumanoidRootPart
+    humanoid.PlatformStand = true
+end
+
+-- Function to stop flying
+local function stopFlying()
+    flying = false
+    bodyVelocity.Parent = nil
+    bodyGyro.Parent = nil
+    humanoid.PlatformStand = false
+end
+
+-- Key press event to toggle flight
+local UIS = game:GetService("UserInputService")
+UIS.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.E then
+        if flying then
+            stopFlying()
+        else
+            startFlying()
+        end
+    end
+end)
+
+-- Fly logic
+game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
+    if flying then
+        local moveDirection = Vector3.new(0, 0, 0)
+        if UIS:IsKeyDown(Enum.KeyCode.W) then
+            moveDirection = moveDirection + (workspace.CurrentCamera.CFrame.LookVector)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then
+            moveDirection = moveDirection - (workspace.CurrentCamera.CFrame.LookVector)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then
+            moveDirection = moveDirection - (workspace.CurrentCamera.CFrame.RightVector)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then
+            moveDirection = moveDirection + (workspace.CurrentCamera.CFrame.RightVector)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then
+            moveDirection = moveDirection + Vector3.new(0, 1, 0)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
+            moveDirection = moveDirection - Vector3.new(0, 1, 0)
+        end
+
+        bodyVelocity.Velocity = moveDirection * flySpeed
+        bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+    end
+end)
+
+-- Highlighting Script by depso
+
+local Players = game:GetService("Players")
+
+-- Function to apply highlight to a player
+local function ApplyHighlight(Player)
+    local Connections = {}
+
+    --// Parts
+    local Character = Player.Character or Player.CharacterAdded:Wait()
+    local Humanoid = Character:WaitForChild("Humanoid")
+    local HightLighter = Instance.new("Highlight", Character)
+
+    local function UpdateFillColor()
+        local DefaultColor = Color3.fromRGB(255, 48, 51)  -- Default color for highlight
+        HightLighter.FillColor = (Player.TeamColor and Player.TeamColor.Color) or DefaultColor
+    end
+
+    local function Disconnect()
+        HightLighter:Remove()
+        
+        for _, Connection in next, Connections do
+            Connection:Disconnect()
+        end
+    end
+
+    --// Connect functions to events
+    table.insert(Connections, Player:GetPropertyChangedSignal("TeamColor"):Connect(UpdateFillColor))
+    table.insert(Connections, Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+        if Humanoid.Health <= 0 then
+            Disconnect()
+        end
+    end))
+end
+
+-- Function to highlight players
+local function HightLightPlayer(Player)
+    if Player.Character then
+        ApplyHighlight(Player)
+    end
+    Player.CharacterAdded:Connect(function()
+        ApplyHighlight(Player)
+    end)
+end
+
+-- Apply highlights to all players currently in the game
+for _, Player in next, Players:GetPlayers() do
+    ApplyHighlight(Player)
+end
+
+-- Connect player added event to highlight players
+Players.PlayerAdded:Connect(ApplyHighlight)
+
