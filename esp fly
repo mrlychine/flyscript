@@ -1,4 +1,4 @@
--- Fly Script by z4trox x ChatGPT & Highlighting Script by depso
+-- Fly Script by mrlychine x jeoshtan & Highlighting Script by depso
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
